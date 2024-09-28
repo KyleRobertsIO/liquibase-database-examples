@@ -82,6 +82,6 @@ createLiquibaseAdminUser
 grantLoginForLiquibaseAdminUser
 createLiquibaseDefaultSchema
 setLiquibaseGrantAllPrivilegesOnLiquibaseSchema
-grantConnectOnDatabaseForLiquibaseAdminUser
 setLiquibaseGrantAllPrivileges
+grantConnectOnDatabaseForLiquibaseAdminUser
 echo "Complete Liquibase Admin Setup"
