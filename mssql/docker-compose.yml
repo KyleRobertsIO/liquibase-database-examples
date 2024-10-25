@@ -1,0 +1,41 @@
+services:
+
+  demo_db:
+    container_name: billing_transaction_db
+    build:
+      context: ./containers/transaction_database
+      dockerfile: Dockerfile
+    environment:
+      MSSQL_SA_USERNAME: ${ROOT_SQL_SERVER_USERNAME}
+      MSSQL_SA_PASSWORD: ${ROOT_SQL_SERVER_PASSWORD}
+      ACCEPT_EULA: 1
+      MSSQL_PID: Developer
+      DATABASE_NAME: ${DATABASE_NAME}
+      LIQUIBASE_USERNAME: ${LIQUIBASE_ADMIN_USERNAME}
+      LIQUIBASE_PASSWORD: ${LIQUIBASE_ADMIN_PASSWORD}
+      LIQUIBASE_DEFAULT_SCHEMA: ${LIQUIBASE_DEFAULT_SCHEMA}
+    ports:
+      - '$DATABASE_PORT:1433'
+    healthcheck:
+      test: /db_setup/init_scripts/healthcheck.sh
+      interval: 1s
+      timeout: 1s
+      retries: 1000
+      start_period: 1s
+  
+  liquibase:
+    container_name: liquibase
+    environment:
+      LIQUIBASE_COMMAND_DEFAULT_SCHEMA_NAME: ${LIQUIBASE_DEFAULT_SCHEMA}
+      LIQUIBASE_COMMAND_CHANGELOG_FILE: changelog/changelog.sql
+      LIQUIBASE_COMMAND_URL: jdbc:sqlserver://$DATABASE_HOST:$DATABASE_PORT;databaseName=$DATABASE_NAME;encrypt=true;trustServerCertificate=true
+      LIQUIBASE_COMMAND_USERNAME: ${LIQUIBASE_ADMIN_USERNAME}
+      LIQUIBASE_COMMAND_PASSWORD: ${LIQUIBASE_ADMIN_PASSWORD}
+      LIQUIBASE_COMMAND_DRIVER: com.microsoft.sqlserver.jdbc.SQLServerDriver
+    image: liquibase/liquibase:4.29
+    command: update
+    volumes:
+      - ./database/liquibase/changelog.sql:/liquibase/changelog/changelog.sql
+    depends_on:
+      billing_transaction_db:
+        condition: service_healthy
